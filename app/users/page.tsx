@@ -44,8 +44,9 @@ export default function UsersPage() {
     fetch(`http://127.0.0.1:2000/users/delete/${id}`, {
       method: 'DELETE',
     }).then(response => response.json()).then(data => {
-        setUsers(data);
-      });
+      console.log(data);
+     setUsers(data);
+    });
     }
   };
 
@@ -64,8 +65,15 @@ export default function UsersPage() {
       joinDate: new Date().toISOString().split('T')[0],
     };
 
-    setUsers([...users, user]);
-    setNewUser({ name: '', email: '', role: 'User', status: 'Active' });
+    fetch('http://127.0.0.1:2000/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(user),
+    }).then(response => response.json()).then(data => {
+      setUsers([...users, data]);
+    });
     setIsAddingUser(false);
   };
 
