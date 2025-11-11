@@ -1,29 +1,29 @@
 'use client';
 
-import { useState } from 'react';
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  status: 'Active' | 'Inactive' | 'Pending';
-  joinDate: string;
-}
+import { useEffect, useState } from 'react';
+import { User } from '../../lib/utils/models/model';
+import { useRouter } from 'next/navigation';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([
-    { id: 1, name: 'John Doe', email: 'john.doe@example.com', role: 'Admin', status: 'Active', joinDate: '2024-01-15' },
-    { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', role: 'User', status: 'Active', joinDate: '2024-01-20' },
-    { id: 3, name: 'Bob Johnson', email: 'bob.johnson@example.com', role: 'Moderator', status: 'Active', joinDate: '2024-01-25' },
-    { id: 4, name: 'Alice Brown', email: 'alice.brown@example.com', role: 'User', status: 'Inactive', joinDate: '2024-02-01' },
-    { id: 5, name: 'Charlie Wilson', email: 'charlie.wilson@example.com', role: 'User', status: 'Pending', joinDate: '2024-02-05' },
-    { id: 6, name: 'Diana Davis', email: 'diana.davis@example.com', role: 'Admin', status: 'Active', joinDate: '2024-02-10' },
-    { id: 7, name: 'Edward Miller', email: 'edward.miller@example.com', role: 'User', status: 'Active', joinDate: '2024-02-15' },
-    { id: 8, name: 'Fiona Garcia', email: 'fiona.garcia@example.com', role: 'Moderator', status: 'Active', joinDate: '2024-02-20' },
-    { id: 9, name: 'George Taylor', email: 'george.taylor@example.com', role: 'User', status: 'Inactive', joinDate: '2024-02-25' },
-    { id: 10, name: 'Helen Anderson', email: 'helen.anderson@example.com', role: 'User', status: 'Pending', joinDate: '2024-03-01' },
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useRouter();
+
+  useEffect(() => {
+
+    const fetchUsers = async () => {
+      setLoading(true);
+      const response = await fetch('http://127.0.0.1:2000/users');
+      const data: User[] = await response.json();
+      setUsers(data);
+      setLoading(false);
+    };
+    try {
+      fetchUsers();
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  }, []);
 
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [newUser, setNewUser] = useState<{
@@ -38,9 +38,14 @@ export default function UsersPage() {
     status: 'Active',
   });
 
-  const deleteUser = (id: number) => {
+  const deleteUser = (event: React.MouseEvent<HTMLButtonElement>, id: number) => {
+    event.stopPropagation();
     if (confirm('Are you sure you want to delete this user?')) {
-      setUsers(users.filter(user => user.id !== id));
+    fetch(`http://127.0.0.1:2000/users/delete/${id}`, {
+      method: 'DELETE',
+    }).then(response => response.json()).then(data => {
+        setUsers(data);
+      });
     }
   };
 
@@ -198,7 +203,7 @@ export default function UsersPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+                <tr key={user.id} className="hover:bg-gray-50" onClick={() => {navigate.push(`/users/${user.id}`)}}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     #{user.id}
                   </td>
@@ -223,7 +228,7 @@ export default function UsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => deleteUser(user.id)}
+                      onClick={(e) => deleteUser(e, user.id)}
                       className="text-red-600 hover:text-red-900 transition-colors duration-200"
                     >
                       Delete
