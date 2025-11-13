@@ -78,6 +78,5 @@ app.post('/users', (req, res, next) => {
 });
 
 app.listen(port, () => {
-    console.log(users)
     console.log(`Example app listening on port ${port}`)
 })
