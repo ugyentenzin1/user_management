@@ -77,6 +77,20 @@ app.post('/users', (req, res, next) => {
     }
 });
 
+app.put('/users/update/:id', (req, res) => {
+    const { id } = req.params;
+    const { name, email, role, status } = req.body;
+    const user = users.find(user => user.id === parseInt(id));
+    if (!user) {
+        res.status(404).json({ error: 'User not found' });
+    }
+    user.name = name;
+    user.email = email;
+    user.role = role;
+    user.status = status;
+    res.status(200).json(user);
+});
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })

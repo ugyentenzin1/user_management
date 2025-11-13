@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { User } from '../../../lib/utils/models/model';
 
@@ -41,8 +41,15 @@ export default function UserDetailsPage({ params }: { params: Promise<{ id: stri
       alert('Please fill in all required fields');
       return;
     }
-    // In a real app, this would update the user via API
-    console.log('Saving user:', editedUser);
+    fetch(`http://127.0.0.1:2000/users/update/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(editedUser),
+    }).then(response => response.json()).then(data => {
+      setUser(data);
+    });
     setIsEditing(false);
   };
 
