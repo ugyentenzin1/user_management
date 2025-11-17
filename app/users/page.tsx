@@ -10,7 +10,6 @@ export default function UsersPage() {
   const navigate = useRouter();
 
   useEffect(() => {
-
     const fetchUsers = async () => {
       setLoading(true);
       const response = await fetch('http://127.0.0.1:2000/users');
@@ -45,7 +44,6 @@ export default function UsersPage() {
       method: 'DELETE',
     }).then(response => response.json()).then(data => {
       console.log(data);
-     setUsers(data);
     });
     }
   };
@@ -57,12 +55,11 @@ export default function UsersPage() {
     }
 
     const user: User = {
-      id: Math.max(...users.map(u => u.id)) + 1,
       name: newUser.name.trim(),
       email: newUser.email.trim(),
       role: newUser.role,
       status: newUser.status,
-      joinDate: new Date().toISOString().split('T')[0],
+      join_date: new Date().toISOString().split('T')[0],
     };
 
     fetch('http://127.0.0.1:2000/users', {
@@ -210,7 +207,7 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
+              {(users||[]).map((user: User) => (
                 <tr key={user.id} className="hover:bg-gray-50" onClick={() => {navigate.push(`/users/${user.id}`)}}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     #{user.id}
@@ -232,11 +229,15 @@ export default function UsersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.joinDate}
+                    {new Date(user.join_date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={(e) => deleteUser(e, user.id)}
+                      onClick={(e) => deleteUser(e, user.id || 0)}
                       className="text-red-600 hover:text-red-900 transition-colors duration-200"
                     >
                       Delete

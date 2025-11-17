@@ -1,7 +1,18 @@
-const express = require('express')
-const cors = require('cors')  // Add this line
-const port = 2000;
+import { Client } from 'pg';
+import express, { json } from 'express';
 const app = express();
+import cors from 'cors';  // Add this line
+const port = 2000;
+const client = new Client({
+    user: 'ugyentenzin',
+    host: 'localhost',
+    database: 'my_database',
+    password: '',
+    port: 5432,
+});
+
+// Connect to database
+client.connect().catch(err => console.error('Connection error', err));
 
 app.use(cors({
     origin: ['http://localhost:4200', 'http://localhost:3000'],
@@ -10,68 +21,51 @@ app.use(cors({
     credentials: true,
     optionsSuccessStatus: 200,
 }));
-app.use(express.json());
+app.use(json());
 
-let users = [
-    { id: 1, name: 'John Doe', email: 'john.doe@example.com', role: 'Admin', status: 'Active', joinDate: '2024-01-15' },
-    { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', role: 'User', status: 'Active', joinDate: '2024-01-20' },
-    { id: 3, name: 'Bob Johnson', email: 'bob.johnson@example.com', role: 'Moderator', status: 'Active', joinDate: '2024-01-25' },
-    { id: 4, name: 'Alice Brown', email: 'alice.brown@example.com', role: 'User', status: 'Inactive', joinDate: '2024-02-01' },
-    { id: 5, name: 'Charlie Wilson', email: 'charlie.wilson@example.com', role: 'User', status: 'Pending', joinDate: '2024-02-05' },
-    { id: 6, name: 'Diana Davis', email: 'diana.davis@example.com', role: 'Admin', status: 'Active', joinDate: '2024-02-10' },
-    { id: 7, name: 'Edward Miller', email: 'edward.miller@example.com', role: 'User', status: 'Active', joinDate: '2024-02-15' },
-    { id: 8, name: 'Fiona Garcia', email: 'fiona.garcia@example.com', role: 'Moderator', status: 'Active', joinDate: '2024-02-20' },
-    { id: 9, name: 'George Taylor', email: 'george.taylor@example.com', role: 'User', status: 'Inactive', joinDate: '2024-02-25' },
-    { id: 10, name: 'Helen Anderson', email: 'helen.anderson@example.com', role: 'User', status: 'Pending', joinDate: '2024-03-01' },
-];
+let users = [];
 
-app.get('/users', (req, res) => {
+app.get('/users', async (req, res) => {
     try {
-        res.status(200).json(users);
+        const fetchedUsers = await client.query('SELECT * FROM users');
+        console.log('Fetched users:', fetchedUsers);
+        res.status(200).json(fetchedUsers.rows);
     } catch (error) {
+        console.log('Error in /users:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 app.get('/users/:id', (req, res) => {
     const { id } = req.params;
-    const user = users.find(user => user.id === parseInt(id));
+    const fetchedUsers = client.query('SELECT * FROM users');
+    const user = fetchedUsers.rows.find(user => user.id === parseInt(id));
     if (!user) {
-        res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ error: 'User not found' });
     }
     res.status(200).json(user);
 });
 
 app.delete('/users/delete/:id', (req, res) => {
     const { id } = req.params;
-    const user = users.find(user => user.id === parseInt(id));
-    const index = users.indexOf(user);
-    if (!user) {
-        res.status(404).json({ error: 'User not found' });
-    }
-    users.splice(index, 1);
-    res.status(200).json(users);
+    const fetchedUsers = client.query(`DELETE FROM users WHERE id = ${id}`);
+    res.status(200).json({ message: 'User deleted successfully' });
 });
 
 // Add POST route for creating users
-app.post('/users', (req, res, next) => {
+app.post('/users', async (req, res, next) => {
     try {
         const { name, email, role, status } = req.body;
         if (!name || !email) {
             return res.status(400).json({ error: 'Name and email are required' });
         }
-
-        const newUser = {
-            id: Math.max(...users.map(u => u.id)) + 1,
-            name: name.trim(),
-            email: email.trim(),
-            role: role || 'User',
-            status: status || 'Active',
-            joinDate: new Date().toISOString().split('T')[0]
-        };
-
-        users.push(newUser);
-        res.status(201).json(newUser);
+        const result = await client.query(
+            `INSERT INTO users (name, email, role, status, join_date)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING *`,
+            [name.trim(), email.trim(), role || 'User', status || 'Active', new Date().toISOString().split('T')[0]]
+          );
+        res.status(201).json(result.rows);
     } catch (error) {
         next(error);
     }
@@ -82,7 +76,7 @@ app.put('/users/update/:id', (req, res) => {
     const { name, email, role, status } = req.body;
     const user = users.find(user => user.id === parseInt(id));
     if (!user) {
-        res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ error: 'User not found' });
     }
     user.name = name;
     user.email = email;
