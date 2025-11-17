@@ -72,7 +72,7 @@ export default function UsersPage() {
       },
       body: JSON.stringify(user),
     }).then(response => response.json()).then(data => {
-      setUsers([...users, data]);
+      fetchUsers();
     });
     setIsAddingUser(false);
   };
