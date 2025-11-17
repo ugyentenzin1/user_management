@@ -9,19 +9,21 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useRouter();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
       const response = await fetch('http://127.0.0.1:2000/users');
       const data: User[] = await response.json();
       setUsers(data);
-      setLoading(false);
-    };
-    try {
-      fetchUsers();
     } catch (error) {
       console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchUsers();
   }, []);
 
   const [isAddingUser, setIsAddingUser] = useState(false);
@@ -37,14 +39,25 @@ export default function UsersPage() {
     status: 'Active',
   });
 
-  const deleteUser = (event: React.MouseEvent<HTMLButtonElement>, id: number) => {
+  const deleteUser = async (event: React.MouseEvent<HTMLButtonElement>, id: number) => {
     event.stopPropagation();
     if (confirm('Are you sure you want to delete this user?')) {
-    fetch(`http://127.0.0.1:2000/users/delete/${id}`, {
-      method: 'DELETE',
-    }).then(response => response.json()).then(data => {
-      console.log(data);
-    });
+      try {
+        const response = await fetch(`http://127.0.0.1:2000/users/delete/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          // Refetch users after successful deletion
+          await fetchUsers();
+        } else {
+          console.error('Failed to delete user');
+          alert('Failed to delete user. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('An error occurred while deleting the user.');
+      }
     }
   };
 
@@ -69,7 +82,7 @@ export default function UsersPage() {
       },
       body: JSON.stringify(user),
     }).then(response => response.json()).then(data => {
-      setUsers([...users, data]);
+      fetchUsers();
     });
     setIsAddingUser(false);
   };
