@@ -67,7 +67,7 @@ app.get('/users/:id', async (req, res) => {
 
 app.delete('/users/delete/:id', (req, res) => {
     const { id } = req.params;
-    const fetchedUsers = client.query(`DELETE FROM users WHERE id = ${id}`);
+    const fetchedUsers = client.query(`DELETE FROM users WHERE id = $1`, [id]);
     res.status(200).json({ message: 'User deleted successfully' });
 });
 
