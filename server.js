@@ -14,15 +14,19 @@ const client = new Client({
 // Connect to database
 client.connect().catch(err => console.error('Connection error', err));
 
+// Configure CORS
+app.use(cors({
+    origin: ['http://localhost:4200', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200,
+}));
+
+app.use(json());
+
+// Custom logging middleware
 app.use((req, res, next) => {
-    cors({
-        origin: ['http://localhost:4200', 'http://localhost:3000'],
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-        credentials: true,
-        optionsSuccessStatus: 200,
-    })
-    json();
     const start = Date.now();
 
     console.log(`➡️  ${req.method} ${req.originalUrl}`);
@@ -68,6 +72,8 @@ app.get('/users/:id', async (req, res) => {
 app.delete('/users/delete/:id', (req, res) => {
     const { id } = req.params;
     const fetchedUsers = client.query(`DELETE FROM users WHERE id = $1`, [id]);
+
+    console.log(fetchedUsers);
     res.status(200).json({ message: 'User deleted successfully' });
 });
 

@@ -39,25 +39,15 @@ export default function UsersPage() {
     status: 'Active',
   });
 
-  const deleteUser = async (event: React.MouseEvent<HTMLButtonElement>, id: number) => {
+  const deleteUser = (event: React.MouseEvent<HTMLButtonElement>, id: number) => {
     event.stopPropagation();
     if (confirm('Are you sure you want to delete this user?')) {
-      try {
-        const response = await fetch(`http://127.0.0.1:2000/users/delete/${id}`, {
-          method: 'DELETE',
-        });
-
-        if (response.ok) {
-          // Refetch users after successful deletion
-          await fetchUsers();
-        } else {
-          console.error('Failed to delete user');
-          alert('Failed to delete user. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('An error occurred while deleting the user.');
-      }
+    fetch(`http://127.0.0.1:2000/users/delete/${id}`, {
+      method: 'DELETE',
+    }).then(response => response.json()).then(data => {
+      console.log(data);
+      fetchUsers();
+    });
     }
   };
 
@@ -81,8 +71,8 @@ export default function UsersPage() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(user),
-    }).then(response => response.json()).then(() => {
-      fetchUsers();
+    }).then(response => response.json()).then(data => {
+      setUsers([...users, data]);
     });
     setIsAddingUser(false);
   };
