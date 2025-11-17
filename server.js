@@ -56,9 +56,9 @@ app.get('/users', async (req, res) => {
     }
 });
 
-app.get('/users/:id', (req, res) => {
+app.get('/users/:id', async (req, res) => {
     const { id } = req.params;
-    const fetchedUsers = client.query('SELECT * FROM users');
+    const fetchedUsers = await client.query('SELECT * FROM users');
     const user = fetchedUsers.rows.find(user => user.id === parseInt(id));
     if (!user) {
         return res.status(404).json({ error: 'User not found' });
