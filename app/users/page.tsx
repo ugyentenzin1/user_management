@@ -81,7 +81,7 @@ export default function UsersPage() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(user),
-    }).then(response => response.json()).then(data => {
+    }).then(response => response.json()).then(() => {
       fetchUsers();
     });
     setIsAddingUser(false);
