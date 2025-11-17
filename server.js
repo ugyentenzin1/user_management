@@ -22,13 +22,33 @@ app.use(cors({
     optionsSuccessStatus: 200,
 }));
 app.use(json());
+app.use((req, res, next) => {
+    const start = Date.now();
+
+    console.log(`➡️  ${req.method} ${req.originalUrl}`);
+    if (req.body && Object.keys(req.body).length > 0) {
+        console.log("📥 Request Body:", req.body);
+    }
+
+    // Capture the original send
+    const originalSend = res.send;
+
+    res.send = function (data) {
+        console.log(`⬅️  Status: ${res.statusCode}`);
+        console.log("📤 Response Body:", data);
+        console.log(`⏱️ ${Date.now() - start}ms`);
+
+        return originalSend.apply(res, arguments);
+    };
+
+    next();
+});
 
 let users = [];
 
 app.get('/users', async (req, res) => {
     try {
         const fetchedUsers = await client.query('SELECT * FROM users');
-        console.log('Fetched users:', fetchedUsers);
         res.status(200).json(fetchedUsers.rows);
     } catch (error) {
         console.log('Error in /users:', error);
