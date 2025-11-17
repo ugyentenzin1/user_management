@@ -14,15 +14,15 @@ const client = new Client({
 // Connect to database
 client.connect().catch(err => console.error('Connection error', err));
 
-app.use(cors({
-    origin: ['http://localhost:4200', 'http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 200,
-}));
-app.use(json());
 app.use((req, res, next) => {
+    cors({
+        origin: ['http://localhost:4200', 'http://localhost:3000'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+        optionsSuccessStatus: 200,
+    })
+    json();
     const start = Date.now();
 
     console.log(`➡️  ${req.method} ${req.originalUrl}`);
@@ -40,7 +40,6 @@ app.use((req, res, next) => {
 
         return originalSend.apply(res, arguments);
     };
-
     next();
 });
 
